@@ -1,4 +1,4 @@
-import { City } from '../types/map';
+/*import { City } from '../types/map';
 
 export const amsterdamCity: City = {
   title: 'Amsterdam',
@@ -40,4 +40,3 @@ export const dusseldorfCity: City = {
   lat: 51.2277,
   lng: 6.7735,
   zoom: 13,
-};

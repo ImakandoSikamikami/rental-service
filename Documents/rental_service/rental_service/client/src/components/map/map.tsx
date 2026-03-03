@@ -1,87 +1,62 @@
-import React, { useRef, useEffect } from 'react';
+import { JSX, useEffect, useRef } from 'react';
 import leaflet from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import useMap from '../../hooks/useMap';
-import { URL_MARKER_DEFAULT, URL_MARKER_CURRENT } from '../../const';
 import { City, MapPoint } from '../../types/map';
 
 type MapProps = {
   city: City;
   points: MapPoint[];
-  selectedPoint?: MapPoint;
-  className?: string;
+  selectedPoint: MapPoint | undefined;
 };
 
-function Map({ city, points, selectedPoint, className = 'cities__map' }: MapProps) {
+function Map({ city, points, selectedPoint }: MapProps): JSX.Element {
   const mapRef = useRef<HTMLDivElement>(null);
-  const map = useMap(mapRef, city);
-  const markersRef = useRef<leaflet.Marker[]>([]);
-
-  const defaultCustomIcon = leaflet.icon({
-    iconUrl: URL_MARKER_DEFAULT,
-    iconSize: [40, 40],
-    iconAnchor: [20, 40],
-  });
-
-  const currentCustomIcon = leaflet.icon({
-    iconUrl: URL_MARKER_CURRENT,
-    iconSize: [40, 40],
-    iconAnchor: [20, 40],
-  });
+  const mapInstanceRef = useRef<leaflet.Map | null>(null);
 
   useEffect(() => {
-    if (map && city) {
-      map.setView([city.lat, city.lng], city.zoom);
-    }
-  }, [map, city.lat, city.lng, city.zoom]); 
+    if (mapRef.current && city?.location) {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+      }
 
-  useEffect(() => {
-    if (map) {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
+      const map = leaflet.map(mapRef.current).setView(
+        [city.location.latitude, city.location.longitude],
+        city.location.zoom
+      );
+
+      leaflet.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        {
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }
+      ).addTo(map);
+
+      const defaultIcon = leaflet.icon({
+        iconUrl: '/img/pin.svg',
+        iconSize: [27, 39],
+        iconAnchor: [13.5, 39],
+      });
+
+      const activeIcon = leaflet.icon({
+        iconUrl: '/img/pin-active.svg',
+        iconSize: [27, 39],
+        iconAnchor: [13.5, 39],
+      });
 
       points.forEach((point) => {
-        const marker = leaflet
-          .marker({
-            lat: point.lat,
-            lng: point.lng,
-          }, {
-            icon: (selectedPoint && point.id === selectedPoint.id)
-              ? currentCustomIcon
-              : defaultCustomIcon,
-          })
-          .addTo(map);
-        markersRef.current.push(marker);
+        leaflet.marker(
+          [point.latitude, point.longitude],
+          {
+            icon: selectedPoint?.id === point.id ? activeIcon : defaultIcon,
+          }
+        ).addTo(map);
       });
+
+      mapInstanceRef.current = map;
     }
+  }, [city, points, selectedPoint]);
 
-    return () => {
-      if (map) {
-        markersRef.current.forEach((marker) => marker.remove());
-        markersRef.current = [];
-      }
-    };
-  }, [map, points]); 
-
-  useEffect(() => {
-    if (map && markersRef.current.length) {
-      markersRef.current.forEach((marker, index) => {
-        const point = points[index];
-        if (point) {
-          const isSelected = selectedPoint && point.id === selectedPoint.id;
-          marker.setIcon(isSelected ? currentCustomIcon : defaultCustomIcon);
-        }
-      });
-    }
-  }, [map, selectedPoint, points]); 
-
-  return (
-    <div
-      style={{ height: '100%' }}
-      className={className}
-      ref={mapRef}
-    />
-  );
+  return <div ref={mapRef} style={{ height: '100%', minHeight: '500px' }} />;
 }
 
 export { Map };

@@ -1,19 +1,19 @@
-import { Review } from '../../types/review';
-import { Review as ReviewComponent } from '../review/review';
+import { Review as ReviewType } from '../../types/review';
+import { Review } from '../review/review';
 
 type ReviewsListProps = {
-  reviews: Review[];
+  reviews: ReviewType[];
 };
 
 function ReviewsList({ reviews }: ReviewsListProps) {
   return (
     <section className="offer__reviews reviews">
       <h2 className="reviews__title">
-        Reviews &middot; <span className="reviews__amount">{reviews.length}</span>
+        Reviews · <span className="reviews__amount">{reviews.length}</span>
       </h2>
       <ul className="reviews__list">
         {reviews.map((review) => (
-          <ReviewComponent key={review.id} review={review} />
+          <Review key={review.id} review={review} /> 
         ))}
       </ul>
     </section>

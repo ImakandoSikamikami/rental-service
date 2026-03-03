@@ -7,51 +7,40 @@ import { BrowserRouter } from 'react-router-dom';
 import { Route } from 'react-router-dom';
 import { Routes } from 'react-router-dom';
 import { PrivateRoute } from "../private-route/private-route";
-import { FullOffer, OffersList} from "../../types/offer";
-import { AppRoute, AuthorizationStatus } from "../../const";
-import { Review } from "../../types/review";
-import { JSX } from "react";
+import { AppRoute } from "../../const";
+import { JSX, useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "../../hooks";
+import { checkAuthAction } from "../../store/api-actions";
+import { ProfilePage } from '../../pages/profile-page/profile-page';
 
-type AppMainPageProps = {
-    rentalOffersCount: number;
-    offers: FullOffer[];
-    offersList: OffersList[];
-    reviews: Review[];
-}
 
-function App({ rentalOffersCount, offers, offersList, reviews }: AppMainPageProps): JSX.Element {
+function App(): JSX.Element {
+    const dispatch = useAppDispatch();
+    const authorizationStatus = useAppSelector((state) => state.authorizationStatus);
+
+    useEffect(() => {
+        dispatch(checkAuthAction());
+    }, [dispatch]);
+
     return (
         <BrowserRouter>
             <Routes>
-                <Route
-                    path={AppRoute.Main}
-                    element={<MainPage />}
-                />
-                <Route
-                    path={AppRoute.Login}
-                    element={<LoginPage />}
-                />
-                <Route
-                    path={`${AppRoute.Offer}/:id`} 
-                    element={<OfferPage offers={offers} offersList={offersList} />}
-                />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path={AppRoute.Main} element={<MainPage />} />
+                <Route path={AppRoute.Login} element={<LoginPage />} />
+                <Route path={`${AppRoute.Offer}/:id`} element={<OfferPage />} />
                 <Route
                     path={AppRoute.Favorites}
                     element={
-                        <PrivateRoute
-                            authorizationStatus={AuthorizationStatus.Auth}
-                        >
+                        <PrivateRoute authorizationStatus={authorizationStatus}>
                             <FavoritesPage />
                         </PrivateRoute>
                     }
                 />
-                <Route
-                    path="*"
-                    element={<NotFoundPage />}
-                />
+                <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </BrowserRouter>
-    )
+    );
 }
 
 export default App;

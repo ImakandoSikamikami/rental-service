@@ -1,5 +1,6 @@
-import { OffersList } from '../types/offer';
+//import { OffersList } from '../types/offer';
 
+/*
 export const offersList: OffersList[] = [
   {
     id: '1',
@@ -445,3 +446,4 @@ export const offersList: OffersList[] = [
     previewImage: '/img/apartment-02.jpg'
   }
 ];
+*/

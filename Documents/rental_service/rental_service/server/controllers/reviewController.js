@@ -1,44 +1,59 @@
-import { adaptReviewToClient } from "../adapters/reviewAdapter.js";
-import { Review } from "../models/review.js";
-import { User } from "../models/user.js";
-import ApiError from "../error/ApiError.js";
+import { Review } from '../models/review.js';
+import { User } from '../models/user.js';
+import ApiError from '../error/ApiError.js';
+import { adaptReviewToClient } from '../adapters/reviewAdapter.js';
 
-const addReview = async (req, res, next) => {
+export const addReview = async (req, res, next) => {
   try {
     const { comment, rating } = req.body;
-    const offerId = req.params.offerId;
+    const { offerId } = req.params;
     const userId = req.user.id;
 
-    if (!comment || !rating || !offerId) {
-    return next(ApiError.badRequest('Не хватает данных для комментария'));
+    if (!comment || !rating) {
+      return next(ApiError.badRequest('Comment and rating are required'));
     }
 
     const review = await Review.create({
-    text: comment,
-    rating,
-    authorId: userId,
-    OfferId: offerId
+      text: comment,
+      rating,
+      publishDate: new Date(),
+      authorId: userId,
+      offerId
     });
 
-    res.status(201).json(review);
+    const reviewWithAuthor = await Review.findByPk(review.id, {
+      include: [{
+        model: User,
+        as: 'author',
+        attributes: ['id', 'username', 'avatar', 'userType']
+      }]
+    });
+
+    res.status(201).json(adaptReviewToClient(reviewWithAuthor));
   } catch (error) {
-    console.error(error);
-    next(ApiError.badRequest('Ошибка при добавлении комментария'));
+    console.error('Error adding review:', error);
+    next(ApiError.internal('Error adding review: ' + error.message));
   }
 };
-const getReviewsByOfferId = async (req, res, next) => { 
-     try {
-        const reviews = await Review.findAll({
-        where: {OfferId: req.params.offerId }, 
-        include: {model: User, as: 'author' }, 
-        order: [['publishDate', 'DESC']]
-    });
-const adaptedReviews = reviews.map(adaptReviewToClient);
-res.json (adaptedReviews);
-} catch (error) {
-    console.error(error);
-    next(ApiError.internal('Ошибка при получении комментариев'));
-    }
-};
 
-export {addReview, getReviewsByOfferId};
+export const getReviewsByOfferId = async (req, res, next) => {
+  try {
+    const { offerId } = req.params;
+
+    const reviews = await Review.findAll({
+      where: { offerId },
+      include: [{
+        model: User,
+        as: 'author',
+        attributes: ['id', 'username', 'avatar', 'userType']
+      }],
+      order: [['publishDate', 'DESC']]
+    });
+
+    const adaptedReviews = reviews.map(adaptReviewToClient);
+    res.json(adaptedReviews);
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    next(ApiError.internal('Error fetching reviews: ' + error.message));
+  }
+};

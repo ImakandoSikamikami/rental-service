@@ -9,7 +9,7 @@ const AppRoute = {
     Offer: '/offer',
 } as const;
 
-const AuthorizationStatus = {
+export const AuthorizationStatus = {
     Auth: 'AUTH',
     NoAuth: 'NO_AUTH',
     Unknown: 'UNKNOWN',
@@ -76,10 +76,19 @@ const SortOffersType = {
   TopRated: 'Top rated first',
 } as const;
 
+export const APIRoute = {
+  Offers: '/offers',
+  Login: '/login',
+  Logout: '/logout',
+  Reviews: '/comments',
+  Favorite: '/favorite'
+} as const;
+
+export const TIMEOUT_SHOW_ERROR = 2000;
+
 export { 
   Setting, 
   AppRoute, 
-  AuthorizationStatus, 
   URL_MARKER_DEFAULT, 
   URL_MARKER_CURRENT, 
   CITIES_LOCATION,

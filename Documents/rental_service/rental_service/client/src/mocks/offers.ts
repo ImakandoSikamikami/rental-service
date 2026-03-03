@@ -1,4 +1,4 @@
-import { FullOffer } from '../types/offer';
+/*import { FullOffer } from '../types/offer';
 
 export const offers: FullOffer[] = [
   {
@@ -231,4 +231,4 @@ export const offers: FullOffer[] = [
     ],
     maxAdults: 4
   }
-];
+];/*

@@ -1,9 +1,10 @@
 import express from 'express';
 import * as dotenv from 'dotenv';
-import sequelize from './config/database.js';
-//import './models/user.js';
-//import './models/offer.js';
-//import './models/review.js';
+import sequelize from './config/database.js'; 
+import './models/user.js';
+import './models/offer.js';
+import './models/review.js';
+import './models/associations.js';
 import cors from 'cors';
 import path from 'path'
 import { router } from './routes/index.js';

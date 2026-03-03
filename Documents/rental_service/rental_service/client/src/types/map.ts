@@ -1,13 +1,15 @@
-export type City = {
-  title: string;
-  lat: number;
-  lng: number;
-  zoom: number;
-};
-
 export type MapPoint = {
   id: string;
+  latitude: number;
+  longitude: number;
   title: string;
-  lat: number;
-  lng: number;
+};
+
+export type City = {
+  name: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    zoom: number;
+  };
 };

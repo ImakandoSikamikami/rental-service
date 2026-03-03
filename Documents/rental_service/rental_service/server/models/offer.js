@@ -1,8 +1,8 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
-import { User } from './user.js'; 
 
 class Offer extends Model {}
+
 Offer.init({
     title: {
         type: DataTypes.STRING,
@@ -20,8 +20,7 @@ Offer.init({
         defaultValue: DataTypes.NOW
     },
     city: {
-        type: DataTypes.ENUM('Paris', 'Cologne', 'Brussels', 'Amsterdam',
-        'Hamburg', 'Dusseldorf'),
+        type: DataTypes.ENUM('Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'),
         allowNull: false
     },
     previewImage: {
@@ -30,7 +29,7 @@ Offer.init({
     },
     photos: {
         type: DataTypes.ARRAY(DataTypes.STRING),
-        allowNull: false,
+        allowNull: true,
     },
     isPremium: {
         type: DataTypes.BOOLEAN,
@@ -65,9 +64,8 @@ Offer.init({
         validate: { min: 100, max: 100000 }
     },
     features: {
-        type: DataTypes.ARRAY(DataTypes.ENUM('Breakfast', 'Air conditioning', 'Laptop friendly workspace', 'Baby seat', 'Washer', 'Towels',
-        'Fridge')),
-        allowNull: false
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
     },
     commentsCount: {
         type: DataTypes.INTEGER,
@@ -84,10 +82,8 @@ Offer.init({
 }, {
     sequelize,
     modelName: 'Offer',
-    tableName: 'offers'
+    tableName: 'offers',
+    timestamps: true
 });
 
-// Связь с пользователем
-Offer.belongsTo(User, { as: 'author', foreignKey: 'authorId' });
-
-export { Offer }; 
+export { Offer };

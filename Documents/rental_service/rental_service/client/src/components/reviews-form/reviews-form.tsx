@@ -54,9 +54,11 @@ function ReviewsForm({ onAddReview }: ReviewsFormProps) {
     }
   };
 
+  const MIN_CHARACTERS = 5; 
+  
   const isSubmitDisabled = 
     formData.rating === 0 || 
-    formData.review.length < 50;
+    formData.review.length < MIN_CHARACTERS;
 
   return (
     <form className="reviews__form form" action="#" method="post" onSubmit={handleSubmit}>
@@ -174,7 +176,7 @@ function ReviewsForm({ onAddReview }: ReviewsFormProps) {
         <p className="reviews__help">
           To submit review please make sure to set{" "}
           <span className="reviews__star">rating</span> and describe
-          your stay with at least <b className="reviews__text-amount">50 characters</b>.
+          your stay with at least <b className="reviews__text-amount">{MIN_CHARACTERS} characters</b>.
         </p>
         <button
           className="reviews__submit form__submit button"

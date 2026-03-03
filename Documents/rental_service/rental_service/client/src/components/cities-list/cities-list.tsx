@@ -1,42 +1,38 @@
-// src/components/cities-list/cities-list.tsx
-import { Link } from 'react-router-dom';
-import { useAppDispatch } from '../../hooks';
+import { JSX } from 'react';
+import { useAppDispatch } from '../../hooks';  // Removed useAppSelector
 import { changeCity } from '../../store/action';
-import { AppRoute, CITIES_LOCATION } from '../../const';
-import { CityOffer } from '../../types/offer';
+import { CITIES_LOCATION } from '../../const';
 
 type CitiesListProps = {
-  selectedCity: CityOffer | undefined;
+  selectedCity: string;
 };
 
-function CitiesList({ selectedCity }: CitiesListProps) {
+function CitiesList({ selectedCity }: CitiesListProps): JSX.Element {
   const dispatch = useAppDispatch();
+
   return (
-    <ul className="locations__list tabs__list">
-      {CITIES_LOCATION.map((city) => (
-        <li
-          key={city.name}
-          className="locations__item"
-          onClick={() => {
-            dispatch(changeCity({
-              name: city.name,
-              location: {
-                latitude: city.location.latitude,
-                longitude: city.location.longitude,
-                zoom: city.location.zoom
-              }
-            }));
-          }}
-        >
-          <Link
-            className={`locations__item-link tabs__item ${city.name === selectedCity?.name ? 'tabs__item--active' : ''}`}
-            to={AppRoute.Main}
-          >
-            <span>{city.name}</span>
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <div className="tabs">
+      <section className="locations container">
+        <ul className="locations__list tabs__list">
+          {CITIES_LOCATION.map((city) => (
+            <li key={city.name} className="locations__item">
+              <a
+                className={`locations__item-link tabs__item ${
+                  city.name === selectedCity ? 'tabs__item--active' : ''
+                }`}
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  dispatch(changeCity(city.name));
+                }}
+              >
+                <span>{city.name}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
   );
 }
 

@@ -5,17 +5,40 @@ const cityCoordinates = {
    Amsterdam: { latitude: 52.3676, longitude: 4.9041, zoom: 13 },
    Hamburg: { latitude: 53.5511, longitude: 9.9937, zoom: 13 },
    Dusseldorf: { latitude: 51.2277, longitude: 6.7735, zoom: 13 }
- };
-const getBaseUrl = () => `${process.env.HOST}:${process.env.PORT || 5000}`;
+};
 
+const getBaseUrl = () => {
+   const host = process.env.HOST || 'http://localhost';
+   const port = process.env.PORT || 5000;
+   const cleanHost = host.replace(/\/$/, '');
+   return `${cleanHost}:${port}`;
+};
+
+const toAbsoluteUrl = (path) => {
+   if (!path) return '';
+   if (path.startsWith('http')) return path;
+   const cleanPath = path.replace(/^.*?(\/static\/)/, '/static/');
+   const baseUrl = getBaseUrl();
+   return `${baseUrl}${cleanPath}`;
+};
 
 export const adaptOfferToClient = (offer) => {
-   const baseUrl = getBaseUrl();
-   const cityLocation = cityCoordinates[offer.city];
-   let previewImage = offer.previewImage;
-   if (previewImage && !previewImage.startsWith('http')) {
-     previewImage = `${baseUrl}${previewImage.startsWith('/') ? '' : '/'}${previewImage}`;
+   const cityLocation = cityCoordinates[offer.city] || { 
+       latitude: offer.latitude || 0, 
+       longitude: offer.longitude || 0, 
+       zoom: 13 
+   };
+   
+   // Get author data if it exists
+   let author = null;
+   if (offer.author) {
+       author = {
+           name: offer.author.username || 'Host',
+           avatarUrl: offer.author.avatar ? toAbsoluteUrl(offer.author.avatar) : null,
+           isPro: offer.author.userType === 'pro'
+       };
    }
+   
    return {
      id: String(offer.id),
      title: offer.title,
@@ -25,63 +48,23 @@ export const adaptOfferToClient = (offer) => {
        name: offer.city,
        location: cityLocation
      },
-     location: offer.latitude && offer.longitude ? {
-       latitude: offer.latitude,
-       longitude: offer.longitude
-     } : { latitude: 0, longitude: 0 },
-     isFavorite: offer.isFavorite,
-     isPremium: offer.isPremium,
-     rating: parseFloat(offer.rating),
-     previewImage
+     location: {
+       latitude: offer.latitude || 0,
+       longitude: offer.longitude || 0
+     },
+     isFavorite: offer.isFavorite || false,
+     isPremium: offer.isPremium || false,
+     rating: parseFloat(offer.rating) || 0,
+     previewImage: toAbsoluteUrl(offer.previewImage),
+     description: offer.description || '',
+     rooms: offer.rooms || 1,
+     guests: offer.guests || 2,
+     features: offer.features || [],
+     author: author,
+     photos: (offer.photos || []).map(toAbsoluteUrl)
    };
 };
 
-
 export const adaptFullOfferToClient = (offer) => {
-   const baseUrl = getBaseUrl();
-
-   const toAbsoluteUrl = (path) => {
-       if (!path) return path;
-       return path.startsWith('http') ? path : `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
-   };
-
-   const previewImage = toAbsoluteUrl(offer.previewImage);
-   const photos = (offer.photos || []).map(toAbsoluteUrl);
-
-
-   const author = offer.author ? {
-       id: offer.author.id,
-       name: offer.author.username,
-       avatar: toAbsoluteUrl(offer.author.avatar),
-       isPro: offer.author.userType === 'pro'   
-   } : null;
-
-   const cityLocation = cityCoordinates[offer.city] || { latitude: 0, longitude: 0, zoom: 10 };
-
-   return {
-       id: String(offer.id),
-       title: offer.title,
-       description: offer.description,
-       publishDate: offer.publishDate,
-       city: {
-           name: offer.city,
-           location: cityLocation
-       },
-       location: {
-           latitude: offer.latitude,
-           longitude: offer.longitude
-       },
-       previewImage,
-       photos,
-       isPremium: offer.isPremium,
-       isFavorite: offer.isFavorite,
-       rating: parseFloat(offer.rating),
-       type: offer.type,
-       rooms: offer.rooms,
-       guests: offer.guests,
-       price: offer.price,
-       features: offer.features,
-       commentsCount: offer.commentsCount,
-       author
-   };
+   return adaptOfferToClient(offer);
 };

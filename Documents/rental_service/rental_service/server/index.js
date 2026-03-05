@@ -11,6 +11,9 @@ import { router } from './routes/index.js';
 import errorMiddleware from './middleware/ErrorHandlingMiddleware.js';
 import { fileURLToPath } from 'url';
 
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+
 dotenv.config();
 
 const ___filename = fileURLToPath(import.meta.url);
@@ -23,6 +26,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use('/static', express.static(path.resolve(__dirname, 'static')));
+
+const swaggerDocument = YAML.load(path.join(__dirname, '../docs/swagger.yaml'));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use('/', router);
 app.use(errorMiddleware);

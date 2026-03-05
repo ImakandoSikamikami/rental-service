@@ -1,10 +1,16 @@
 {
-  "devDependencies": {
-    "@types/leaflet": "^1.9.21",
-    "@types/react": "^19.2.6",
-    "@types/react-dom": "^19.2.3"
+  "name": "rental_service",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "swagger:gen-examples": "node scripts/gen-swagger-examples.js"
   },
   "dependencies": {
-    "leaflet": "^1.9.4"
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^10.3.0",
+    "yaml": "^2.8.2"
   }
 }

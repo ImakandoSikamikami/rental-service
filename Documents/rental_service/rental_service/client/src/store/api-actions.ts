@@ -27,6 +27,30 @@ export const fetchOffersAction = createAsyncThunk<void, undefined, {
   },
 );
 
+// NEW: Fetch single offer by ID
+export const fetchOfferAction = createAsyncThunk<Offer, string, {
+  dispatch: AppDispatch;
+  state: State;
+  extra: AxiosInstance;
+  rejectValue: string;
+}>(
+  'offer/fetchOffer',
+  async (offerId, { extra: api, rejectWithValue }) => {
+    try {
+      const { data } = await api.get<Offer>(`${APIRoute.Offers}/${offerId}`);
+      return data;
+    } catch (error) {
+      if (error && typeof error === 'object' && 'response' in error) {
+        const err = error as { response?: { status?: number } };
+        if (err.response?.status === 404) {
+          return rejectWithValue('Offer not found');
+        }
+      }
+      return rejectWithValue('Failed to fetch offer');
+    }
+  }
+);
+
 export const fetchReviewsAction = createAsyncThunk<Review[], string, {
   dispatch: AppDispatch;
   state: State;

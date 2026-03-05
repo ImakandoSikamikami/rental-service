@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../../hooks";
 import { 
+  fetchOfferAction,
   fetchReviewsAction, 
   postReviewAction, 
   logoutAction,
@@ -13,6 +14,7 @@ import { ReviewsForm } from "../../components/reviews-form/reviews-form";
 import { Map } from "../../components/map/map";
 import { NearPlacesList } from "../../components/near-places-list/near-places-list";
 import { CITIES_LOCATION, AppRoute } from "../../const";
+import { LoadingPage } from "../../components/loading-page/loading-page";
 
 const getImageUrl = (path: string) => {
   if (!path) return '';
@@ -25,12 +27,15 @@ function OfferPage() {
   const params = useParams();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const offers = useAppSelector((state) => state.offers);
+
+  const currentOffer = useAppSelector((state) => state.currentOffer);
+  const offerLoadingStatus = useAppSelector((state) => state.offerLoadingStatus);
   const reviewsByOfferId = useAppSelector((state) => state.reviews || {});
   const user = useAppSelector((state) => state.user);
+  const offers = useAppSelector((state) => state.offers);
+  
   const [selectedPoint, setSelectedPoint] = useState<any>();
   
-  const offer = offers.find((item) => item.id === params.id);
   const currentReviews = params.id ? reviewsByOfferId[params.id] || [] : [];
   const favoriteCount = offers.filter(o => o.isFavorite).length;
 
@@ -40,24 +45,35 @@ function OfferPage() {
   };
 
   const handleFavoriteClick = () => {
-    if (offer) {
-      const newStatus = offer.isFavorite ? 0 : 1;
-      dispatch(toggleFavoriteAction({ offerId: offer.id, status: newStatus }));
+    if (currentOffer) {
+      const newStatus = currentOffer.isFavorite ? 0 : 1;
+      dispatch(toggleFavoriteAction({ offerId: currentOffer.id, status: newStatus }));
     }
   };
 
   useEffect(() => {
     if (params.id) {
+      dispatch(fetchOfferAction(params.id));
       dispatch(fetchReviewsAction(params.id));
     }
     window.scrollTo(0, 0);
   }, [params.id, dispatch]);
 
-  if (!offer) {
-    return <div className="offer-page">Loading offer...</div>;
+  if (offerLoadingStatus === 'loading') {
+    return <LoadingPage />;
   }
 
-  const nearbyOffers = offers.filter(item => item.id !== offer.id).slice(0, 3);
+  if (offerLoadingStatus === 'failed' || !currentOffer) {
+    navigate('/404');
+    return null;
+  }
+
+  const offer = currentOffer; 
+
+  const nearbyOffers = offers
+    .filter(item => item.id !== offer.id)
+    .slice(0, 3);
+  
   const cityData = CITIES_LOCATION.find(city => city.name === offer.city.name);
 
   const mapPoints = [
@@ -114,83 +130,94 @@ function OfferPage() {
             </div>
             <nav className="header__nav">
               <ul className="header__nav-list">
-                <li className="header__nav-item">
-                  <Link className="header__nav-link" to="/profile">
-                    <span>Profile</span>
-                  </Link>
-                </li>
-                <li className="header__nav-item user">
-                  <Link className="header__nav-link header__nav-link--profile" to={AppRoute.Favorites}>
-                    <div className="header__avatar-wrapper user__avatar-wrapper">
-                      {user?.avatar ? (
-                        <img 
-                          src={getFullImageUrl(user.avatar)}
-                          alt="User avatar"
-                          style={{
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            objectFit: 'cover'
-                          }}
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                            const parent = e.currentTarget.parentElement;
-                            if (parent) {
-                              const initial = document.createElement('span');
-                              initial.style.display = 'inline-block';
-                              initial.style.width = '20px';
-                              initial.style.height = '20px';
-                              initial.style.backgroundColor = '#4481c3';
-                              initial.style.color = 'white';
-                              initial.style.borderRadius = '50%';
-                              initial.style.textAlign = 'center';
-                              initial.style.lineHeight = '20px';
-                              initial.style.fontSize = '12px';
-                              initial.style.fontWeight = 'bold';
-                              initial.textContent = user.email?.[0].toUpperCase() || 'U';
-                              parent.appendChild(initial);
-                            }
-                          }}
-                        />
-                      ) : (
-                        <span style={{
-                          display: 'inline-block',
-                          width: '20px',
-                          height: '20px',
-                          backgroundColor: '#4481c3',
-                          color: 'white',
-                          borderRadius: '50%',
-                          textAlign: 'center',
-                          lineHeight: '20px',
-                          fontSize: '12px',
-                          fontWeight: 'bold'
-                        }}>
-                          {userInitial}
-                        </span>
-                      )}
-                    </div>
-                    <span className="header__user-name user__name">
-                      {user?.email || 'email@example.com'}
-                    </span>
-                    <span className="header__favorite-count" style={{ marginLeft: '5px' }}>
-                      {favoriteCount}
-                    </span>
-                  </Link>
-                </li>
+                {user ? (
+                  <>
+                    <li className="header__nav-item">
+                      <Link className="header__nav-link" to="/profile">
+                        <span>Profile</span>
+                      </Link>
+                    </li>
 
-                {/* Sign out link */}
-                <li className="header__nav-item">
-                  <Link 
-                    to="#" 
-                    className="header__nav-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleLogout();
-                    }}
-                  >
-                    <span className="header__signout">Sign out</span>
-                  </Link>
-                </li>
+                    <li className="header__nav-item user">
+                      <Link className="header__nav-link header__nav-link--profile" to={AppRoute.Favorites}>
+                        <div className="header__avatar-wrapper user__avatar-wrapper">
+                          {user?.avatar ? (
+                            <img 
+                              src={getFullImageUrl(user.avatar)}
+                              alt="User avatar"
+                              style={{
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: '50%',
+                                objectFit: 'cover'
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const parent = e.currentTarget.parentElement;
+                                if (parent) {
+                                  const initial = document.createElement('span');
+                                  initial.style.display = 'inline-block';
+                                  initial.style.width = '20px';
+                                  initial.style.height = '20px';
+                                  initial.style.backgroundColor = '#4481c3';
+                                  initial.style.color = 'white';
+                                  initial.style.borderRadius = '50%';
+                                  initial.style.textAlign = 'center';
+                                  initial.style.lineHeight = '20px';
+                                  initial.style.fontSize = '12px';
+                                  initial.style.fontWeight = 'bold';
+                                  initial.textContent = user.email?.[0].toUpperCase() || 'U';
+                                  parent.appendChild(initial);
+                                }
+                              }}
+                            />
+                          ) : (
+                            <span style={{
+                              display: 'inline-block',
+                              width: '20px',
+                              height: '20px',
+                              backgroundColor: '#4481c3',
+                              color: 'white',
+                              borderRadius: '50%',
+                              textAlign: 'center',
+                              lineHeight: '20px',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              {userInitial}
+                            </span>
+                          )}
+                        </div>
+                        <span className="header__user-name user__name">
+                          {user?.email}
+                        </span>
+                        <span className="header__favorite-count" style={{ marginLeft: '5px' }}>
+                          {favoriteCount}
+                        </span>
+                      </Link>
+                    </li>
+
+                    <li className="header__nav-item">
+                      <Link 
+                        to="#" 
+                        className="header__nav-link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleLogout();
+                        }}
+                      >
+                        <span className="header__signout">Sign out</span>
+                      </Link>
+                    </li>
+                  </>
+                ) : (
+
+                  <li className="header__nav-item">
+                    <Link className="header__nav-link" to={AppRoute.Login}>
+                      <span className="header__signout">Sign in</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>
@@ -369,7 +396,7 @@ function OfferPage() {
               </div>
 
               <ReviewsList reviews={currentReviews} />
-              <ReviewsForm onAddReview={handleAddReview} />
+              {user && <ReviewsForm onAddReview={handleAddReview} />}
             </div>
           </div>
 

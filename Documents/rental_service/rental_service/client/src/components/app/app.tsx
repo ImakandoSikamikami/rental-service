@@ -6,6 +6,7 @@ import { NotFoundPage } from "../../pages/not-found-page/not-found-page";
 import { BrowserRouter } from 'react-router-dom';
 import { Route } from 'react-router-dom';
 import { Routes } from 'react-router-dom';
+import { Navigate } from 'react-router-dom'; // Add this import
 import { PrivateRoute } from "../private-route/private-route";
 import { AppRoute } from "../../const";
 import { JSX, useEffect } from "react";
@@ -37,7 +38,8 @@ function App(): JSX.Element {
                         </PrivateRoute>
                     }
                 />
-                <Route path="*" element={<NotFoundPage />} />
+                <Route path="/404" element={<NotFoundPage />} />
+                <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
         </BrowserRouter>
     );
